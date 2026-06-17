@@ -107,3 +107,5 @@ modules/comercial/
 - DLQ real para el consumidor de RabbitMQ.
 - Particionado de `stock_movement`, `outbox_event`, `audit_log` por `(tenantId, fecha)`.
 ```
+
+<!-- auto-deploy test 2026-06-17T17:41:55.4063535-04:00 -->
