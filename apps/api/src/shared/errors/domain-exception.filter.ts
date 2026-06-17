@@ -30,7 +30,10 @@ export class DomainExceptionFilter implements ExceptionFilter {
       );
     }
 
-    if (exception instanceof Error && exception.name === 'DomainError') {
+    const isDomain =
+      exception instanceof Error &&
+      (exception.name === 'DomainError' || exception.constructor?.name === 'DomainError');
+    if (isDomain) {
       return res.status(HttpStatus.BAD_REQUEST).json({
         statusCode: 400,
         error: 'Bad Request',
