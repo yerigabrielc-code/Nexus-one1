@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { PrismaModule } from './shared/prisma/prisma.module';
 import { OutboxModule } from './shared/outbox/outbox.module';
 import { TenantInterceptor } from './shared/tenant/tenant.interceptor';
 import { SagaDrainInterceptor } from './shared/saga/saga-drain.interceptor';
+import { DomainExceptionFilter } from './shared/errors/domain-exception.filter';
 import { AuthModule } from './modules/auth/auth.module';
 import { ComercialModule } from './modules/comercial/comercial.module';
 import { InventarioModule } from './modules/inventario/inventario.module';
@@ -43,6 +44,7 @@ import { SagaModule } from './shared/saga/saga.module';
     // drenado síncrono de la saga corre dentro de ese contexto.
     { provide: APP_INTERCEPTOR, useClass: TenantInterceptor },
     { provide: APP_INTERCEPTOR, useClass: SagaDrainInterceptor },
+    { provide: APP_FILTER, useClass: DomainExceptionFilter },
   ],
 })
 export class AppModule {}
