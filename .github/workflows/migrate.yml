@@ -1,0 +1,32 @@
+name: DB Migrate (Supabase)
+
+# Ejecutar manualmente desde la pestaña Actions tras configurar el secret
+# DATABASE_MIGRATION_URL (cadena de conexión DIRECTA de Supabase, puerto 5432).
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: 'Sembrar datos demo (true/false)'
+        default: 'false'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_MIGRATION_URL: ${{ secrets.DATABASE_MIGRATION_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @nexus/prisma exec prisma generate
+      - name: Aplicar migraciones
+        run: pnpm --filter @nexus/prisma exec prisma migrate deploy
+      - name: Aplicar políticas RLS
+        run: node prisma/scripts/apply-rls.mjs
+      - name: Seed (opcional)
+        if: ${{ github.event.inputs.seed == 'true' }}
+        run: pnpm --filter @nexus/prisma exec tsx prisma/seed.ts
