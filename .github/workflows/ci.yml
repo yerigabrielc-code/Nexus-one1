@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nexus_owner
+          POSTGRES_PASSWORD: nexus_owner
+          POSTGRES_DB: nexus
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U nexus_owner -d nexus"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://nexus_app:nexus_app@localhost:5432/nexus?schema=public
+      DATABASE_MIGRATION_URL: postgresql://nexus_owner:nexus_owner@localhost:5432/nexus?schema=public
+      DATABASE_RELAY_URL: postgresql://nexus_relay:nexus_relay@localhost:5432/nexus?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+
+      - run: pnpm install --frozen-lockfile
+
+      # Crea roles de app/relay (en CI no corre el init-script de docker).
+      - name: Create DB roles
+        run: |
+          PGPASSWORD=nexus_owner psql -h localhost -U nexus_owner -d nexus -f infra/docker/init-app-role.sql
+
+      - run: pnpm db:generate
+      - run: pnpm db:migrate -- --name ci
+      - run: pnpm db:rls
+
+      - run: pnpm lint
+      - run: pnpm build
+
+      # GATE de seguridad: aislamiento multi-tenant. Bloquea el merge si falla.
+      - name: Tenant isolation (RLS) gate
+        run: pnpm test:isolation

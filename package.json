@@ -1,0 +1,28 @@
+{
+  "name": "nexus-one",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nexus One — The Business Operating System (SaaS multi-tenant para PYMES LATAM)",
+  "packageManager": "pnpm@9.6.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:isolation": "turbo run test:isolation",
+    "db:generate": "pnpm --filter @nexus/prisma prisma generate",
+    "db:migrate": "pnpm --filter @nexus/prisma prisma migrate dev",
+    "db:rls": "pnpm --filter @nexus/prisma rls:apply",
+    "db:seed": "pnpm --filter @nexus/prisma seed",
+    "infra:up": "docker compose -f infra/docker/docker-compose.dev.yml up -d",
+    "infra:down": "docker compose -f infra/docker/docker-compose.dev.yml down"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.5.0",
+    "prettier": "^3.3.0"
+  }
+}
